@@ -1,0 +1,7 @@
+Call mcp__arm__replay to obtain the compiled functions' outputs for the finite
+domain and the Lean theorem signatures that certify them. The checker will
+import ReplayFacts when the tool succeeds. Use the returned equalities to
+rewrite machineSum and machineBound to the finite tables, then prove the
+sensitivity inequality or give a concrete refutation. Use decide for small
+closed facts about the tables and the specification. The tool checks compiled
+function behavior only. Your candidate theorem must establish the verdict.

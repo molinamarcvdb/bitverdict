@@ -1,0 +1,7 @@
+For a refutation, prove a concrete witness against the actual machine functions.
+For a proof, prove the behavior of the machine functions on the finite domain and
+then use the specification. Use List.finRange and List.all to check finite cases,
+and List.all_eq_true and List.mem_finRange to recover a fact for an arbitrary
+element. Use cbv for closed machine computations and decide for small pure facts.
+The driver sets high cbv step and heartbeat limits. Use the ARM model through
+machineSum and machineBound. The disassembly and emulated outputs are hints only.

@@ -1,0 +1,25 @@
+Check the frozen Lean specification against one compiled ARM64 program. The driver
+imports Machine, which defines machineSum and machineBound, and Spec, which defines
+Sensitivity. Neither file can be changed. Choose one result.
+
+PROVE followed by Lean declarations that include
+theorem candidate : Sensitivity machineSum machineBound := ...
+REFUTE followed by Lean declarations that include
+theorem candidate : ¬ Sensitivity machineSum machineBound := ...
+UNKNOWN if you cannot produce either proof.
+
+The checker uses Lean 4.34.0 with the imports shown above and no Mathlib.
+Use theorem for every proof declaration, including helpers. The lemma keyword
+and the fin_cases tactic are unavailable. When using List.mem_finRange, pass the
+index explicitly. The following helper shows the exact core Lean syntax.
+
+theorem finiteCaseExample (i : Fin 5) (p : Fin 5 → Bool)
+    (h : (List.finRange 5).all p = true) : p i = true :=
+  (List.all_eq_true.mp h) i (List.mem_finRange i)
+
+{replay_instructions}
+
+Return the verdict on line one and only Lean declarations below it. Use def for
+definitions and theorem for all proofs. Before submitting, check that you have
+used theorem for every helper. Omit imports, set_option, comments, metaprogramming,
+sorry, and native_decide.

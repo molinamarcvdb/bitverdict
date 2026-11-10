@@ -1,0 +1,8 @@
+.env
+.venv/
+.cache/
+__pycache__/
+*.py[cod]
+.DS_Store
+runs/
+cases/*/native/build/

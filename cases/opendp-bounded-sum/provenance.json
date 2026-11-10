@@ -1,0 +1,22 @@
+{
+  "lean": "4.34.0",
+  "rust": "1.94.1",
+  "arm_model_git": "808b4b7ffef198e6a91f71ed776d641a1c236882",
+  "opendp_git": {
+    "before": "6a6a6c7afa4be180777e42ab84d4542e4649f4aa",
+    "after": "a64feeeb31de22ae9b4bdb20097d437cf93e044e"
+  },
+  "binary_sha256": {
+    "before": "9580b6a5e2be1f31eb889ad746de9e8365f74cc4c5e6590b000a544ba057301b",
+    "after": "0b3760b2ff18ccfc83253430d5b888f99d45519d1036a479b0e1d0b2caa5ba02"
+  },
+  "fixture_sha256": {
+    "native/ArmReplay.lean": "c27a7f67d8651a7ca5aaac70ed2e75def31ab0db00db422792165fe0b990eb1e",
+    "native/extract.py": "82c2b94beb9533333273415406fdba91b0d65f570e19f4ef6ff039c9e6278507",
+    "fixtures/ClosureBytes.lean": "997c7993bd3b597ef280851e1a504acdb3e6600eac29c1b912fa3826554e9901",
+    "fixtures/before.asm": "fc745c9c6064d037c78e4be8ad07c063f5f44d50a10e19e85d0d71ea89023ab5",
+    "fixtures/after.asm": "f90cdf49b6d4012da7f6dfa19cab97c445f57dde5fc7684663d10b0772f66e8e",
+    "Spec.lean": "c9bb4e8cf48219cbd2260a8e23971152e92841debd162154e4cb85a2a07cee36",
+    "Inputs.lean": "c3eb96696e65be4bb32e20a5d6702177e956e09bff9371a158799242644b9d55"
+  }
+}

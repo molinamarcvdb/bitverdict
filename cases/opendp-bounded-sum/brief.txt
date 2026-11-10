@@ -1,0 +1,8 @@
+The input contains exactly two signed 32-bit integers in the public interval [0, 3].
+The machine provides sum : Dataset → Option Nat and bound : Budget → Option Nat.
+Dataset = Fin 4 × Fin 4 and Budget = Fin 5. None represents execution failure.
+The symmetric input distance counts the minimum number of insertions and deletions
+between the two multisets. Order is irrelevant and duplicates count.
+For every pair of allowed datasets and every distance budget d between 0 and 4,
+if their input distance is at most d, both sums and the bound at d must return
+successfully, and the bound must cover the absolute difference between the sums.

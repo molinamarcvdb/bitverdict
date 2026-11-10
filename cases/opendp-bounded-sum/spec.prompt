@@ -1,0 +1,10 @@
+Formalize the public contract below in Lean 4.34.0, using only core Lean.
+Inputs.lean already declares Dataset and Budget. The driver imports that module.
+Define these three names and signatures. Extra helpers are fine.
+- symmetricDistance : Dataset → Dataset → Nat
+- absoluteDifference : Nat → Nat → Nat
+- Sensitivity : (Dataset → Option Nat) → (Budget → Option Nat) → Prop
+All input is below. Begin directly with your first Lean definition. Return only Lean declarations, with no imports, options, comments, or metaprogramming.
+The implementation, test witnesses, and expected results are intentionally absent.
+
+PUBLIC CONTRACT
