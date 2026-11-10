@@ -1,0 +1,13 @@
+[project]
+name = "dp-binary-verification"
+version = "0.1.0"
+description = "An experimental Lean checker for compiled differential privacy code"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "deepseek-harness-sdk==0.2.1rc2",
+    "mcp==1.30.0",
+]
+
+[tool.uv]
+package = false

@@ -21,15 +21,17 @@ Start with the [OpenDP case](cases/opendp-bounded-sum/README.md) for the bug, th
 
 ## Try the pilot
 
-Use an Apple Silicon Mac. Install Python 3.12 and [uv](https://docs.astral.sh/uv/). The pilot uses Lean 4.34.0 and a pinned revision of DeepMind's ARM64 model. Set `OPENDP_PILOT_CACHE` to the directory containing the toolchain and model checkout. The existing pilot cache defaults to `~/Library/Caches/lean-binary-dp-demo`.
+Use an Apple Silicon Mac with the Xcode Command Line Tools and [uv](https://docs.astral.sh/uv/). Run these commands from the repo root. The first setup downloads Lean and builds the pinned DeepMind ARM64 model.
 
 ```sh
-uv venv --python 3.12
-uv pip install -r requirements.txt
-uv run --no-project python -m tests.smoke --out runs/offline
+uv sync --locked --python 3.12
+uv run --locked python -m dpverify setup
+uv run --locked python -m tests.smoke --out runs/offline
 ```
 
 The smoke check uses a local model fixture. It exercises the same harness and Lean checker and verifies that they accept the fixed proof and the buggy-build refutation. It runs for several minutes. It needs no OpenRouter key.
+
+Setup keeps Lean and the ARM64 model in `~/Library/Caches/dp-binary-verification`. Set `DPVERIFY_CACHE` to use a different directory and keep it set when you run the checker. Setup checks the Lean release archive's SHA-256 and the ARM64 model's Git revision before building.
 
 ### Run the agent on OpenRouter
 
@@ -44,13 +46,13 @@ set +a
 The checked-in [specification](cases/opendp-bounded-sum/Spec.lean) is the reviewed spec from the pilot. This command checks the fixed binary snapshot, candidate A, with the same DeepSeek 1017 model and an automatic retry.
 
 ```sh
-uv run --no-project python -m dpverify --attempts 2 --max-tokens 32768 verify \
+uv run --locked python -m dpverify --attempts 2 --max-tokens 32768 verify \
   cases/opendp-bounded-sum \
   --approve-spec c9bb4e8cf48219cbd2260a8e23971152e92841debd162154e4cb85a2a07cee36 \
   --candidate A --arm-replay --lean-profile --out runs/fixed
 ```
 
-Omit `--candidate A` to check both snapshots. Use `--proof-model` after `verify` to try another model. For an OpenAI-compatible vLLM endpoint, pass `--endpoint` before the subcommand, set `DP_HARNESS_MODEL_KEY`, and use the model ID served by vLLM. Use `python -m dpverify draft runs/spec` to draft a new spec, review the resulting `Spec.lean`, and pass its approved hash to `verify`.
+Omit `--candidate A` to check both snapshots. Use `--proof-model` after `verify` to try another model. For an OpenAI-compatible vLLM endpoint, pass `--endpoint` before the subcommand, set `DP_HARNESS_MODEL_KEY`, and use the model ID served by vLLM. Use `uv run --locked python -m dpverify draft runs/spec` to draft a new spec, review the resulting `Spec.lean`, and pass its approved hash to `verify`.
 
 ### Read the run
 

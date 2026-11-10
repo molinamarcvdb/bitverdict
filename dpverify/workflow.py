@@ -4,7 +4,6 @@ import argparse
 import hashlib
 from importlib.metadata import version
 import json
-import os
 from pathlib import Path
 import re
 import shutil
@@ -13,13 +12,11 @@ import sys
 import time
 
 from .model import DEFAULT_MODEL, OPENROUTER_URL, ask, credentials
+from .toolchain import LEAN_VERSION, MODEL_REVISION, Toolchain, digest
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 CASE = ROOT / "cases/opendp-bounded-sum"
-CACHE = Path(os.getenv("OPENDP_PILOT_CACHE", Path.home() / "Library/Caches/lean-binary-dp-demo"))
-ARM = CACHE / "code-verification/arm64-semantics/Arm64/.lake/build/lib/lean"
-LEAN = Path(os.getenv("LEAN_BIN_DIR", CACHE / "lean-4.34.0-darwin_aarch64/bin")) / "lean"
 PUBLIC_CASE = (CASE / "brief.txt").read_text()
 PROVENANCE = json.loads((CASE / "provenance.json").read_text())
 FORBIDDEN = re.compile(
@@ -39,21 +36,14 @@ example : (Dataset → Option Nat) → (Budget → Option Nat) → Prop := Sensi
 """
 
 
-def digest(path):
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def put(path, contents):
     path.write_text(contents, encoding="utf-8")
 
 
 def check_toolchain():
-    lean_version = subprocess.check_output([str(LEAN), "--short-version"], text=True).strip()
-    model = CACHE / "code-verification"
-    revision = subprocess.check_output(["git", "-C", str(model), "rev-parse", "HEAD"], text=True).strip()
-    if lean_version != PROVENANCE["lean"] or revision != PROVENANCE["arm_model_git"]:
-        raise ValueError("The Lean or DeepMind ARM model version differs from the pilot's pin.")
-    subprocess.run(["git", "-C", str(model), "diff", "--quiet", "HEAD", "--", "arm64-semantics"], check=True)
+    if (PROVENANCE["lean"], PROVENANCE["arm_model_git"]) != (LEAN_VERSION, MODEL_REVISION):
+        raise ValueError("The case requires a different Lean or ARM64 model version.")
+    Toolchain.from_environment().require()
 
 
 def lean_code(response):
@@ -66,14 +56,14 @@ def lean_code(response):
 
 def check_lean(directory, file, *, output=None, timeout=420, profile=False):
     directory = directory.resolve()
-    if not LEAN.is_file() or not (ARM / "Arm64/Trusted/ISA/Semantics.olean").is_file():
-        raise ValueError("Build the OpenDP pilot's pinned Lean/ARM dependencies first.")
+    toolchain = Toolchain.from_environment()
+    lean, arm = toolchain.lean, toolchain.model_library
     args = [
         "/usr/bin/sandbox-exec", "-f", str(HERE / "lean.sb"),
-        "-D", f"LEAN_HOME={LEAN.parent.parent.resolve()}",
-        "-D", f"ARM_LIB={ARM.resolve()}", "-D", f"WORK={directory}",
-        "-D", f"LEAN_BIN={LEAN.resolve()}",
-        str(LEAN.resolve()), "--json", "-M", "8000", "-j", "2",
+        "-D", f"LEAN_HOME={toolchain.lean_home.resolve()}",
+        "-D", f"ARM_LIB={arm.resolve()}", "-D", f"WORK={directory}",
+        "-D", f"LEAN_BIN={lean.resolve()}",
+        str(lean.resolve()), "--json", "-M", "8000", "-j", "2",
     ]
     if output:
         args += ["-o", output]
@@ -87,7 +77,7 @@ def check_lean(directory, file, *, output=None, timeout=420, profile=False):
         try:
             done = subprocess.run(args, cwd=directory, stdout=trace,
                                   stderr=subprocess.STDOUT, timeout=timeout, env={
-                                      "LEAN_PATH": f"{directory}:{ARM.resolve()}",
+                                      "LEAN_PATH": f"{directory}:{arm.resolve()}",
                                       "PATH": "/usr/bin:/bin",
                                   })
             success = done.returncode == 0
@@ -147,7 +137,7 @@ def record_run(run, args, role, model):
                         lean_profile=args.lean_profile)
         if args.arm_replay:
             settings.update(replay_timeout_seconds=args.replay_timeout, mcp_sdk=version("mcp"))
-        files = [HERE / "workflow.py", HERE / "model.py", HERE / "lean.sb", CASE / "proof.prompt",
+        files = [HERE / "workflow.py", HERE / "model.py", HERE / "toolchain.py", HERE / "lean.sb", CASE / "proof.prompt",
                  CASE / ("proof-replay.prompt" if args.arm_replay else "proof-direct.prompt")]
         if args.arm_replay:
             files.append(HERE / "replay.py")
@@ -334,6 +324,7 @@ def main():
                         help="Override the OpenRouter model's default reasoning effort")
     parser.add_argument("--fixture-replay", action="store_true", help=argparse.SUPPRESS)
     commands = parser.add_subparsers(dest="stage", required=True)
+    commands.add_parser("setup", help="Install pinned Lean and ARM64 model dependencies")
     spec = commands.add_parser("draft")
     spec.add_argument("run", type=Path)
     spec.add_argument("--spec-model", default=DEFAULT_MODEL)
@@ -355,6 +346,9 @@ def main():
     if args.reasoning_effort and args.endpoint.rstrip("/") != OPENROUTER_URL:
         parser.error("--reasoning-effort currently configures the OpenRouter endpoint")
     try:
+        if args.stage == "setup":
+            Toolchain.from_environment().install()
+            return 0
         args.key = credentials(args.endpoint)
         check_toolchain()
         return draft(args) if args.stage == "draft" else verify(args)
