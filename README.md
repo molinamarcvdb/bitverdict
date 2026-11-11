@@ -19,6 +19,8 @@ flowchart LR
 
 Start with the [OpenDP case](cases/opendp-bounded-sum/README.md) for the bug, the input domain, and the connection between the extracted bytes and Lean.
 
+The [dataset notes](docs/dataset-sources.md) list other upstream fixes and the work needed to turn them into benchmark cases.
+
 ## Try the pilot
 
 Use an Apple Silicon Mac with the Xcode Command Line Tools and [uv](https://docs.astral.sh/uv/). Run these commands from the repo root. The first setup downloads Lean and builds the pinned DeepMind ARM64 model.
