@@ -11,6 +11,8 @@ This research pilot gives DeepSeek one Lean sensitivity claim and two compiled A
 
 ![A reviewed Lean spec and a compiled ARM64 build feed the DeepSeek proof agent. Lean checks the proposed theorem and provides diagnostics for retries. The harness saves the verdict and trace.](docs/figures/verification-protocol.png)
 
+[See what happens inside each block](docs/protocol.md).
+
 The spec describes how much the sum may change between neighboring datasets. Review it once and use its SHA-256 to pin the same statement for both builds. The repo includes reviewed specs. The optional `draft` command asks a model to write a new one from a case brief.
 
 Each case ships extracted instruction bytes and a handwritten Lean adapter that supplies inputs using the recorded Rust call layout. The harness uses DeepMind's ARM64 model to execute those bytes. It gives the proof agent either output hints or, for the bounded-sum case, a tool that returns equalities Lean has checked. The final theorem connects the compiled computation to the spec over the case's finite input domain. [Machine adapter](cases/opendp-bounded-sum/Machine.lean) · [Replay tool](dpverify/replay.py)

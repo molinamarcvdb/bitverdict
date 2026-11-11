@@ -1,0 +1,72 @@
+These figures were generated with the built-in image generator.
+Style reference for each initial generation: ../verification-protocol.png
+
+01-reviewed-lean-spec.png
+
+Use case: infographic-diagram
+Asset type: standalone detail figure in a technical README walkthrough
+The attached overview is a style reference only. Create a new wide 2:1 landscape figure, focused on the one block below. Match the white canvas, dark navy text, muted blue and teal cards, and simple straight connectors of the reference. Large crisp sans-serif type. Readable at 760 px display width. Leave even margins. No gradients, shadows, mascots, logos, or ornament. Use only the quoted labels, each exactly once. Connectors must have clear arrowheads and never cross text.
+
+Title: “Reviewed Lean spec”
+A clean three-card left-to-right sequence, with one arrow between neighboring cards.
+Left card: “Public contract” / “One insertion or removal” / “Change at most 2³⁰”
+Center card: “Spec.lean” / “Define inputs, distance, and bound”
+Right card: “Review and freeze” / “Pin by SHA-256” / “Reuse for both builds”
+Put the three heading phrases in the colored card headers. Put the remaining phrases inside the cards as body text. Use a raised superscript 30 in 2³⁰, spelled exactly.
+
+02-compiled-arm64-build.png
+
+Use case: infographic-diagram
+Asset type: standalone detail figure in a technical README walkthrough
+The attached overview is a style reference only. Create a new wide 2:1 landscape figure, focused on the one block below. Match the white canvas, dark navy text, muted blue and teal cards, and simple straight connectors of the reference. Large crisp sans-serif type. Readable at 760 px display width. Leave even margins. No gradients, shadows, mascots, logos, or ornament. Use only the quoted labels, each exactly once. Connectors must have clear arrowheads and never cross text.
+
+Title: “Compiled ARM64 build”
+Three evenly spaced cards in a simple left-to-right sequence, with a single arrow between each pair.
+Left card: “Build the Rust probe” / “Pinned OpenDP revision” / “ARM64 binary”
+Center card: “Extract the sum” / “Instruction bytes” / “Rust vector layout”
+Right card: “Replay in Lean” / “Set registers and memory” / “Run DeepMind’s ARM64 model” / “Read the signed i32 result”
+Use colored card headers for the three main phrases. Keep the body text dark and readable. You may wrap text without changing the words. All arrows go to the right.
+
+03-deepseek-proof-agent.png
+
+Use case: infographic-diagram
+Asset type: standalone detail figure in a technical README walkthrough
+The attached overview is a style reference only. Create a new wide 2:1 landscape figure, focused on the one block below. Match the white canvas, dark navy text, muted blue and teal cards, and simple straight connectors of the reference. Large crisp sans-serif type. Readable at 760 px display width. Leave even margins. No gradients, shadows, mascots, logos, or ornament. Use only the quoted labels, each exactly once. Connectors must have clear arrowheads and never cross text.
+
+Title: “DeepSeek proof agent”
+Arrange three columns across the canvas, with one rightward arrow between the cards in the columns.
+Left card: “Inputs” / “Frozen spec” / “Machine API and disassembly” / “ARM replay hints”
+Middle card: “DeepSeek” / “Writes a Lean theorem”
+Right card: “Response” / “PROVE · claim holds” / “REFUTE · claim fails” / “UNKNOWN · no theorem”
+Each heading is in a colored card header. Treat the last card as three possible responses. Make all three response lines visually distinct and spell the uppercase words exactly. The agent can return UNKNOWN, so the middle card describes what DeepSeek tries to do.
+
+Edit of the initial figure
+
+Edit this existing infographic. Preserve the exact composition, wide aspect ratio, title, three card headers, left card text, colors, arrows, and type style. Change only three body labels. In the middle card, replace “Writes a Lean theorem” with “Drafts a Lean theorem”. In the response card, replace “PROVE · claim holds” with “PROVE · proof attempt” and replace “REFUTE · claim fails” with “REFUTE · refutation attempt”. Keep “UNKNOWN · no theorem” verbatim. Set the labels in clear large sans-serif type. Wrap only if necessary to fit. Preserve the dividers and leave even margins. These are proposed responses for a separate Lean checker. Do not add any other labels.
+
+04-lean-checker.png
+
+Use case: infographic-diagram
+Asset type: standalone detail figure in a technical README walkthrough
+The attached overview is a style reference only. Create a new wide 2:1 landscape figure, focused on the one block below. Match the white canvas, dark navy text, muted blue and teal cards, and simple straight connectors of the reference. Large crisp sans-serif type. Readable at 760 px display width. Leave even margins. No gradients, shadows, mascots, logos, or ornament. Use only the quoted labels, each exactly once. Connectors must have clear arrowheads and never cross text.
+
+Title: “Lean checker”
+Three cards in a left-to-right sequence with two solid rightward arrows.
+Left card: “Harness wrapper” / “Fixes the claim or its negation”
+Center card: “Lean kernel” / “Checks the submitted theorem”
+Right card: “Axiom audit” / “Checks theorem dependencies”
+Below the row, place two small separate outcome labels in one centered line, with generous space between them: “Accepted theorem” and “Diagnostics for retry”. Color the first teal and the second dark navy. They are possible outcomes of the whole checker, not individual steps. Do not draw arrows to the outcome labels. The only arrows are left to center and center to right.
+
+05-saved-run.png
+
+Use case: infographic-diagram
+Asset type: standalone detail figure in a technical README walkthrough
+The attached overview is a style reference only. Create a new wide 2:1 landscape figure, focused on the one block below. Match the white canvas, dark navy text, muted blue and teal cards, and simple straight connectors of the reference. Large crisp sans-serif type. Readable at 760 px display width. Leave even margins. No gradients, shadows, mascots, logos, or ornament. Use only the quoted labels, each exactly once. Connectors must have clear arrowheads and never cross text.
+
+Title: “Saved run”
+A centered wide report card on the upper row and three equal evidence cards on the lower row. Draw three clean downward connectors from the report card, one to each evidence card. No other arrows.
+Upper card: “report.json” / “A · Fixed build · Proved” / “B · Old build · Refuted”
+Lower left card: “Run settings” / “Model, limits, and spec hash”
+Lower center card: “Lean evidence” / “Theorem and checker log”
+Lower right card: “Model trace” / “Prompt, response, and usage”
+The upper card shows the actual OpenDP overflow run result. Use teal for its header and muted blue for the three evidence card headers.
