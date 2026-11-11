@@ -23,10 +23,13 @@ The binary proof starts at the compiled closures. It relies on the native fixtur
 
 ## Reproduce
 
-On Apple Silicon, use Rust 1.94.1, Lean 4.34.0, Xcode's LLVM tools, Python 3, and GMP, MPFR and OpenSSL 3. The build uses the historical library's system-library feature and links against local C libraries because its bundled 2021 GMP build fails on modern macOS ARM64.
+On Apple Silicon, use Rust 1.94.1, Xcode's LLVM tools, Python 3, and GMP, MPFR and OpenSSL 3. The build links against local C libraries because the bundled 2021 GMP build fails on modern macOS ARM64. Run the main setup first to install the pinned Lean and ARM64 model. [Toolchain setup](../../../README.md#set-up-and-run-offline)
 
-- `./run.sh` fetches the pinned source if needed, builds and runs both historical probes, extracts their bytes, and checks Lean.
-- `./run.sh --check-only` extracts the saved binaries and checks Lean without rebuilding OpenDP.
-- The `OPENDP_PILOT_CACHE` and `LEAN_BIN_DIR` environment variables can point to an alternate cache or Lean toolchain.
+From the repository root, use the same toolchain cache to build and run both historical probes, extract their bytes, and check the reference proofs.
 
-The saved evidence includes the [old native log](build/before/native.log), [fixed native log](build/after/native.log), [Lean log](build/verification.log), [raw instruction data](build/ClosureBytes.lean), and the [old](build/before/closures.asm) and [fixed](build/after/closures.asm) disassembly.
+```sh
+OPENDP_PILOT_CACHE="${DPVERIFY_CACHE:-$HOME/Library/Caches/dp-binary-verification}" \
+  cases/opendp-bounded-sum/native/run.sh
+```
+
+Append `--check-only` to reuse both saved binaries. The script writes `before/native.log`, `after/native.log`, `verification.log`, `ClosureBytes.lean`, and the disassemblies under `cases/opendp-bounded-sum/native/build/`.

@@ -9,48 +9,53 @@ This case checks the unsized `make_bounded_sum::<i32>` before and after OpenDP's
 | `[2^30, 2^30 - 1, 1]` | -2,147,483,648 | 2,147,483,647 |
 | `[2^30, 2^30 - 1, 0]` | 2,147,483,647 | 2,147,483,647 |
 
-The frozen Lean contract checks every ordered pair in this domain at insertion distance zero or one. It requires successful sums and a change no larger than `2^30` for neighboring datasets. The native probe also calls OpenDP's stability map at distances zero and one and checks the returned bounds `0` and `2^30`.
+Adding `1` to `[2^30, 2^30 - 1]` changes the old build's result by 4,294,967,295, above its advertised bound of `2^30`. The Lean spec checks all pairs in the table whose distance is zero or one insertion or removal. [Frozen Lean spec](evidence/deepseek-v4.1-flash-1017/Spec.lean)
 
 ```mermaid
-flowchart LR
-    Probe["Rust probe calls both pinned OpenDP revisions"] --> Binary["ARM64 Mach-O binaries"]
-    Binary --> Extract["Resolve closure address and extract bytes"]
-    Extract --> Replay["DeepMind ARM64 model executes sum closure in Lean"]
-    Contract["One frozen Lean sensitivity contract"] --> Agent["DeepSeek attempts a proof or refutation"]
-    Replay --> Agent
-    Agent --> Gate["Lean kernel checks theorem and axiom audit"]
+flowchart TD
+    Probe["Build and run the Rust probe"] --> Replay["Replay the compiled sum in Lean"]
+    Probe --> Bound["Check OpenDP's advertised bound natively"]
+    Replay --> Machine["Lean adapter exposes the sum and bound"]
+    Bound -.-> Machine
+    Spec["Frozen Lean spec"] --> Agent["DeepSeek writes a proof or refutation"]
+    Machine --> Agent
+    Agent --> Gate["Lean checks the theorem and its axioms"]
 ```
 
-## Rebuild and run
+## Recorded result
 
-On an Apple Silicon Mac, install Rust 1.94.1, Xcode Command Line Tools, Python 3, `uv`, Lean 4.34.0, and the pinned ARM64 model as described in the [main README](../../README.md). Build both native versions and extract the sum closures:
+DeepSeek V4.1 Flash 1017 produced both theorems on the first attempt using the same spec. Lean checked each theorem with only `propext` and `Quot.sound` in its axiom list.
+
+| Candidate | Lean verdict | Lean check | Model tokens |
+| --- | --- | ---: | ---: |
+| A · Fixed revision | Proved | 8.36 s | 20,896 |
+| B · Old revision | Refuted | 21.91 s | 9,093 |
+
+Both candidate folders include the prompts, responses, model events, Lean files, and checker logs. The archived copy normalizes local filesystem paths. [Report](evidence/deepseek-v4.1-flash-1017/report.json) · [Run settings](evidence/deepseek-v4.1-flash-1017/experiment.json) · [Candidate A](evidence/deepseek-v4.1-flash-1017/A/) · [Candidate B](evidence/deepseek-v4.1-flash-1017/B/)
+
+## Run the agent
+
+Set up the toolchain and load your OpenRouter key. Run this command from the repository root. It uses the checked-in instruction snapshots and the exact spec from the recorded run. [Setup](../../README.md#set-up-and-run-offline) · [API key](../../README.md#run-the-agent-on-openrouter)
 
 ```sh
-OPENDP_PILOT_CACHE="$PWD/.cache/install-test" cases/opendp-overflow/native/run.sh
-```
-
-The script downloads the two pinned OpenDP revisions when needed, compiles both probes, verifies their outputs and bounds, and saves their binaries and build logs under the ignored `native/build/` directory. `fixtures/ClosureBytes.lean` and the two disassemblies are checked in with hashes in `provenance.json`.
-
-Copy the case spec and its checked declarations into a run directory, review it, then use its SHA-256 in the proof command:
-
-```sh
-mkdir -p runs/overflow-spec
-cp cases/opendp-overflow/Inputs.lean runs/overflow-spec/Inputs.lean
-cat cases/opendp-overflow/Spec.lean cases/opendp-overflow/SpecChecks.lean > runs/overflow-spec/Spec.lean
-shasum -a 256 runs/overflow-spec/Spec.lean
 uv run --locked python -m dpverify --case opendp-overflow --attempts 2 --max-tokens 32768 verify \
-  runs/overflow-spec --approve-spec <reviewed-sha256> --proof-model deepseek/deepseek-v4.1-flash-1017 \
-  --out runs/overflow-result
+  cases/opendp-overflow/evidence/deepseek-v4.1-flash-1017 \
+  --approve-spec e0f2f02a87297c05a65faa6633c72fbe9b5d33b9bb3e5c030e221ab6799f7f43 \
+  --proof-model deepseek/deepseek-v4.1-flash-1017 --lean-profile --out runs/overflow-result
 ```
 
-The harness checks both candidates with the same spec and model. Candidate A is the fixed revision; candidate B is the old revision. Their full prompts, model responses, streamed events, token usage, Lean files, and Lean logs are saved under `runs/overflow-result/`.
+The harness runs both candidates and saves the new traces under `runs/overflow-result/`. Pick a fresh output directory for each run. [How to read the output](../../README.md#read-a-run)
+
+## Rebuild the Rust binaries
+
+Use Rust 1.94.1, Python 3, and the Xcode Command Line Tools on an Apple Silicon Mac. Run this command from the repository root.
+
+```sh
+cases/opendp-overflow/native/run.sh
+```
+
+The script fetches the pinned OpenDP revisions, compiles both probes, and saves the binaries and native logs under `native/build/`. It rewrites the tracked instruction bytes and disassemblies under `fixtures/`. Use a separate checkout when comparing a local rebuild with the recorded snapshots. [Build script](native/run.sh) · [Original revisions and hashes](provenance.json)
 
 ## Scope
 
-The proof target is the compiled sum closure. Lean replays its extracted ARM64 instructions using the recorded Rust `Vec<i32>` layout. The probe executes the stability map natively and checks its values at distances zero and one; this case does not separately replay that map's machine instructions. It checks a finite sensitivity contract, not OpenDP's noise mechanism or an end-to-end differential privacy guarantee.
-
-## First live run
-
-On 2026-11-11, `deepseek/deepseek-v4.1-flash-1017` handled both candidates against spec SHA-256 `e0f2f02a87297c05a65faa6633c72fbe9b5d33b9bb3e5c030e221ab6799f7f43`. It proved A (the fix) and refuted B (the old build) on the first attempt. Lean took 8.36 seconds for the proof and 21.91 seconds for the refutation; both verdicts use only `propext` and `Quot.sound`.
-
-The model used 20,896 tokens for A and 9,093 for B. The [run report](evidence/deepseek-v4.1-flash-1017/report.json) and [settings](evidence/deepseek-v4.1-flash-1017/experiment.json) accompany the full prompts, responses, streamed notifications, session events, usage, proof files, and Lean logs under `evidence/deepseek-v4.1-flash-1017/A/` and `B/`. The raw, unmodified run is also in the ignored local directory `runs/overflow-deepseek-1017/`; the checked-in copy normalizes the machine-specific repository path.
+Lean executes the compiled sum using the recorded Rust `Vec<i32>` layout. The native probe calls the stability map at distances zero and one, checking for `0` and `2^30`. The Lean adapter uses those two values as the bound for the finite sensitivity claim. [ARM replay](ReplayCore.lean) · [Bound used in Lean](Machine.lean) · [Native probe](native/probe.rs)

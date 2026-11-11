@@ -2,13 +2,13 @@
 
 These revision pairs come from upstream Git history. Each “before” revision is the first parent of the fix. The proposed checks describe what a new fixture would need to establish. A revision pair becomes a benchmark case after both builds and the same frozen claim have been checked.
 
-## Small native case
+## Implemented case
 
 ### OpenDP unsized bounded-sum overflow
 
 The July 23, 2021 fix changed `make_bounded_sum` from an ordinary integer sum to saturating addition. The stability constant remains the maximum absolute input bound. [Before](https://github.com/opendp/opendp/commit/1460de1cf84a1e1844534a7c2135b480533099f7) · [Fix](https://github.com/opendp/opendp/commit/e564f2484186fccaa586db033f03060199111c60)
 
-**Proposed check.** Compile the `i32` sum closure with public bounds `[0, 2^30]`. Use `[2^30, 2^30 - 1]` and that vector with `1` appended. They differ by one insertion, so the advertised bound is `2^30`. With release overflow checks disabled, the old sum is expected to move from `i32::MAX` to `i32::MIN`; saturating addition keeps both outputs at `i32::MAX`. Compare the results as mathematical integers to avoid overflow in the check itself. The two vectors require a variable-length input layout and signed result decoding. The historical forward-map closure returns a boxed value, so a first fixture can validate the native map and check the compiled sum against the frozen constant.
+The pilot compiled both revisions and checked the sum against the same Lean sensitivity claim. Appending `1` to `[2^30, 2^30 - 1]` changes the old sum from `i32::MAX` to `i32::MIN`. The fixed sum stays at `i32::MAX`. The native probe checks the stability map, and Lean replays the compiled sum using a variable-length Rust input and signed result decoding. [Case and reproduction steps](../cases/opendp-overflow/README.md) · [Run report](../cases/opendp-overflow/evidence/deepseek-v4.1-flash-1017/report.json)
 
 ## Native cases that need more modeling
 
