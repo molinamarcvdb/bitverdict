@@ -9,16 +9,7 @@ This research pilot gives DeepSeek one Lean sensitivity claim and two compiled A
 
 ## How it works
 
-```mermaid
-flowchart TD
-    Brief["Public sensitivity claim"] --> Spec["Reviewed Lean spec"]
-    Binary["Compiled OpenDP build"] --> Machine["Replay ARM64 instructions in Lean"]
-    Spec --> Agent["DeepSeek writes a proof or refutation"]
-    Machine --> Agent
-    Agent --> Check["Lean checks the theorem against the spec and machine model"]
-    Check --> Result["Proved, refuted, or unresolved"]
-    Check -. "Diagnostics on retry" .-> Agent
-```
+![A reviewed Lean spec and a compiled ARM64 build feed the DeepSeek proof agent. Lean checks the proposed theorem and provides diagnostics for retries. The harness saves the verdict and trace.](docs/figures/verification-protocol.png)
 
 The spec describes how much the sum may change between neighboring datasets. Review it once and use its SHA-256 to pin the same statement for both builds. The repo includes reviewed specs. The optional `draft` command asks a model to write a new one from a case brief.
 

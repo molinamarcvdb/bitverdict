@@ -1,0 +1,28 @@
+Use case: infographic-diagram
+Asset type: wide, standalone figure for a research repository README
+Create a restrained flat architecture diagram on a white landscape canvas. Use large, crisp sans-serif type, dark ink, muted blue and teal accents, and simple thin connectors. Keep it readable at 760 px wide. No illustrations, gradients, logos, or extra text.
+
+Title, verbatim: “Verifying compiled OpenDP code”
+
+Two stacked input cards on the left, aligned on a grid:
+“Reviewed Lean spec”
+“Sensitivity claim pinned by SHA-256”
+
+“Compiled ARM64 build”
+“Instruction bytes and Rust call layout”
+“Replay with DeepMind’s ARM64 model”
+
+Both input cards send one solid arrow toward the middle card:
+“DeepSeek proof agent”
+“Drafts a proof or refutation”
+
+A solid arrow goes from DeepSeek to the next card:
+“Lean checker”
+“Checks the theorem and its axioms”
+
+From the checker, a solid arrow leads to a distinct output panel, preferably underneath the checker:
+“Saved run”
+“Proved · Refuted · Unresolved”
+“Proof, logs, and model trace”
+
+Draw one separate dashed return arrow, from the Lean checker back to DeepSeek, labeled “Retry with diagnostics”. Its arrowhead must point at DeepSeek. Render each label exactly once. Use only the requested arrows. Prioritize clear direction and spacing over decoration.
