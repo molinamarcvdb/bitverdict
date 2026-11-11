@@ -68,6 +68,10 @@ See the recorded overflow run for a complete example. [Report](cases/opendp-over
 
 ## Repository layout
 
+![The command line entry point calls workflow.py, which coordinates case preparation, model calls, Lean checking, and toolchain setup. The diagram shows the case files, optional replay tool, toolchain cache, and saved run files.](docs/figures/code-structure.png)
+
+[Vector PDF](docs/figures/code-structure.pdf) · [Editable LaTeX source](docs/figures/code-structure.tex)
+
 - [dpverify/](dpverify/) contains the workflow, toolchain setup, model integration, and Lean checker.
 - [cases/](cases/) contains the frozen specs, extracted instruction snapshots, provenance, and native rebuild recipes for both OpenDP cases.
 - [tests/smoke.py](tests/smoke.py) runs the workflow through the real SDK with a local fixture provider.
