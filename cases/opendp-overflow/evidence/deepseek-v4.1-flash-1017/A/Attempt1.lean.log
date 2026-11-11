@@ -1,0 +1,29 @@
+import took 623ms
+{"caption":"","data":"tactic execution of Lean.Parser.Tactic.cbv took 5.13s\nshare common exprs took 215ms\nprocess pre-definitions took 302ms\n","endPos":null,"fileName":"Attempt1.lean","isSilent":false,"keepFullRange":false,"kind":"[anonymous]","pos":{"column":0,"line":10},"severity":"information"}
+{"caption":"","data":"type checking took 1.47s\n","endPos":null,"fileName":"Attempt1.lean","isSilent":false,"keepFullRange":false,"kind":"[anonymous]","pos":{"column":8,"line":10},"severity":"information"}
+{"caption":"","data":"'HarnessVerdict' depends on axioms: [propext, Quot.sound]","endPos":{"column":6,"line":39},"fileName":"Attempt1.lean","isSilent":false,"keepFullRange":false,"kind":"[anonymous]","pos":{"column":0,"line":39},"severity":"information"}
+{"caption":"","data":"elaboration took 171ms\n","endPos":null,"fileName":"Attempt1.lean","isSilent":false,"keepFullRange":false,"kind":"[anonymous]","pos":{"column":0,"line":39},"severity":"information"}
+cumulative profiling times:
+	attribute application 0.0265ms
+	blocked (unaccounted) 7.28s
+	compilation (IR) 3.51ms
+	compilation (LCNF base) 16.8ms
+	compilation (LCNF impure) 25.6ms
+	compilation (LCNF mono) 17.2ms
+	congr simp thm 6.09ms
+	elaboration 221ms
+	fix level params 29.5ms
+	import 623ms
+	initialization 176ms
+	instantiate metavars 0.0514ms
+	interpretation 10ms
+	let-to-have transformation 0.225ms
+	linting 2.17ms
+	module linting 0.28ms
+	parsing 0.727ms
+	process pre-definitions 304ms
+	share common exprs 215ms
+	simp 57.4ms
+	tactic execution 5.15s
+	type checking 1.49s
+	typeclass inference 33.5ms

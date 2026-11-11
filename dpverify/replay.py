@@ -8,7 +8,8 @@ import time
 
 from mcp.server.fastmcp import FastMCP
 
-from .workflow import LIMITS, check_lean, digest, put
+from .lean import LIMITS, check_lean, put
+from .toolchain import digest
 
 
 DATA = """import Machine
@@ -83,18 +84,18 @@ def serve(stage, work, timeout, profile):
         try:
             if not cached:
                 put(stage / "ReplayValues.lean", DATA)
-                ok, data, elapsed = check_lean(stage, "ReplayValues.lean", timeout=45)
-                result["evaluation_seconds"] = elapsed
-                if not ok:
-                    raise ValueError(f"ARM replay evaluation failed: {data[-1000:]}")
-                sums, bounds = (json.loads(line) for line in data.splitlines() if line.strip())
+                values = check_lean(stage, "ReplayValues.lean", timeout=45)
+                result["evaluation_seconds"] = values.seconds
+                if not values.ok:
+                    raise ValueError(f"ARM replay evaluation failed: {values.diagnostics[-1000:]}")
+                sums, bounds = (json.loads(line) for line in values.diagnostics.splitlines() if line.strip())
                 put(stage / "ReplayFacts.lean", facts_source(sums, bounds))
-                ok, diagnostic, elapsed = check_lean(
+                certificates = check_lean(
                     stage, "ReplayFacts.lean", output="ReplayFacts.olean", timeout=timeout, profile=profile,
                 )
-                result["certificate_seconds"] = elapsed
-                if not ok:
-                    raise ValueError(f"ARM replay certificates failed: {diagnostic[-1400:]}")
+                result["certificate_seconds"] = certificates.seconds
+                if not certificates.ok:
+                    raise ValueError(f"ARM replay certificates failed: {certificates.diagnostics[-1400:]}")
                 result["certificate_sha256"] = digest(stage / "ReplayFacts.lean")
                 result["response"] = {"sum": sums, "bound": bounds, "lean_api": API}
                 result["status"] = "checked"

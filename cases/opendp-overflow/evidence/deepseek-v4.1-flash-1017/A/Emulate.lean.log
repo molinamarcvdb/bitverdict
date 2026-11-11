@@ -1,0 +1,2 @@
+{"caption":"","data":"[some 1073741823, some 2147483647, some 2147483647, some 2147483647]","endPos":{"column":5,"line":3},"fileName":"Emulate.lean","isSilent":false,"keepFullRange":false,"kind":"[anonymous]","pos":{"column":0,"line":3},"severity":"information"}
+{"caption":"","data":"[some 0, some 1073741824]","endPos":{"column":5,"line":4},"fileName":"Emulate.lean","isSilent":false,"keepFullRange":false,"kind":"[anonymous]","pos":{"column":0,"line":4},"severity":"information"}

@@ -1,0 +1,38 @@
+import Spec
+import Machine
+
+set_option maxRecDepth 32768
+set_option maxHeartbeats 15000000
+set_option cbv.maxSteps 2000000
+theorem candidate : ¬ Sensitivity machineSum machineBound := by
+  intro h
+  have hsum1 : machineSum (1 : Dataset) = some 2147483647 := by
+    cbv
+  have hsum2 : machineSum (2 : Dataset) = some (-2147483648) := by
+    cbv
+  have hbound : machineBound (1 : Budget) = some 1073741824 := by
+    cbv
+  have hdist : symmetricDistance (1 : Dataset) (2 : Dataset) ≤ (1 : Budget).val := by
+    decide
+  obtain ⟨sx, sy, b, hx, hy, hb, hle⟩ :=
+    h (1 : Dataset) (2 : Dataset) (1 : Budget) hdist
+  have hsx : sx = 2147483647 := by
+    rw [hsum1] at hx
+    cases hx
+    rfl
+  have hsy : sy = -2147483648 := by
+    rw [hsum2] at hy
+    cases hy
+    rfl
+  have hbval : b = 1073741824 := by
+    rw [hbound] at hb
+    cases hb
+    rfl
+  rw [hsx, hsy, hbval] at hle
+  have habs : absoluteDifference 2147483647 (-2147483648) = 4294967295 := by
+    cbv
+  rw [habs] at hle
+  exact (by decide : ¬ (4294967295 ≤ 1073741824)) hle
+
+theorem HarnessVerdict : ¬ _root_.Sensitivity _root_.machineSum _root_.machineBound := _root_.candidate
+#print axioms HarnessVerdict

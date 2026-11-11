@@ -1,0 +1,31 @@
+PROVE
+def machineValue (x : Dataset) : Int :=
+  ([1073741823, 2147483647, 2147483647, 2147483647][x.val]!)
+
+theorem machineSum_value (x : Dataset) : machineSum x = some (machineValue x) := by
+  have all : rows.all (fun a => decide (machineSum a = some (machineValue a))) = true := by
+    cbv
+  exact of_decide_eq_true (List.all_eq_true.mp all x (row_mem x))
+
+theorem machineBound_eq (d : Budget) : machineBound d = some (expectedBound d) := by
+  rfl
+
+theorem machine_sensitivity_core (x y : Dataset) (d : Budget)
+    (h : symmetricDistance x y ≤ d.val) :
+    absoluteDifference (machineValue x) (machineValue y) ≤ expectedBound d := by
+  have all : rows.all (fun a => rows.all (fun b => (List.finRange 2).all (fun k =>
+      decide (symmetricDistance a b ≤ k.val →
+        absoluteDifference (machineValue a) (machineValue b) ≤ expectedBound k)))) = true := by
+    decide
+  have atX := List.all_eq_true.mp all x (row_mem x)
+  have atXY := List.all_eq_true.mp atX y (row_mem y)
+  have atXYD := List.all_eq_true.mp atXY d (List.mem_finRange d)
+  exact of_decide_eq_true atXYD h
+
+theorem candidate : Sensitivity machineSum machineBound := by
+  intro x y d h
+  refine ⟨machineValue x, machineValue y, expectedBound d, ?_, ?_, ?_, ?_⟩
+  · exact machineSum_value x
+  · exact machineSum_value y
+  · exact machineBound_eq d
+  · exact machine_sensitivity_core x y d h

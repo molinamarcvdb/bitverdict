@@ -5,128 +5,27 @@ import hashlib
 from importlib.metadata import version
 import json
 from pathlib import Path
-import re
 import shutil
 import subprocess
 import sys
-import time
 
+from .cases import ROOT, DEFAULT_CASE, Case, available_cases
+from .lean import LIMITS, check_lean, lean_code, put, require_lean
 from .model import DEFAULT_MODEL, OPENROUTER_URL, ask, credentials
-from .toolchain import LEAN_VERSION, MODEL_REVISION, Toolchain, digest
+from .toolchain import Toolchain, digest
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent
-CASE = ROOT / "cases/opendp-bounded-sum"
-PUBLIC_CASE = (CASE / "brief.txt").read_text()
-PROVENANCE = json.loads((CASE / "provenance.json").read_text())
-FORBIDDEN = re.compile(
-    r"(?m)^\s*#|\b(import|export|namespace|open|set_option|axiom|constant|unsafe|partial|"
-    r"native_decide|sorry|admit|initialize|run_tac|run_elab|elab|macro|syntax|attribute|IO)\b"
-    r"|\+native|\/-|--"
-)
-AXIOMS = {"propext", "Quot.sound", "Classical.choice"}
-LIMITS = """set_option maxRecDepth 32768
-set_option maxHeartbeats 15000000
-set_option cbv.maxSteps 2000000
-"""
-SPEC_CHECKS = """
-example : Dataset → Dataset → Nat := symmetricDistance
-example : Nat → Nat → Nat := absoluteDifference
-example : (Dataset → Option Nat) → (Budget → Option Nat) → Prop := Sensitivity
-"""
-
-
-def put(path, contents):
-    path.write_text(contents, encoding="utf-8")
-
-
-def check_toolchain():
-    if (PROVENANCE["lean"], PROVENANCE["arm_model_git"]) != (LEAN_VERSION, MODEL_REVISION):
-        raise ValueError("The case requires a different Lean or ARM64 model version.")
-    Toolchain.from_environment().require()
-
-
-def lean_code(response):
-    match = re.fullmatch(r"```(?:lean4?|lean)?\s*\n(.*?)\n```", response.strip(), re.S)
-    code = (match[1] if match else response).strip()
-    if not code or FORBIDDEN.search(code):
-        raise ValueError("Expected Lean declarations without imports, options, comments, or unsafe tactics.")
-    return code
-
-
-def check_lean(directory, file, *, output=None, timeout=420, profile=False):
-    directory = directory.resolve()
-    toolchain = Toolchain.from_environment()
-    lean, arm = toolchain.lean, toolchain.model_library
-    args = [
-        "/usr/bin/sandbox-exec", "-f", str(HERE / "lean.sb"),
-        "-D", f"LEAN_HOME={toolchain.lean_home.resolve()}",
-        "-D", f"ARM_LIB={arm.resolve()}", "-D", f"WORK={directory}",
-        "-D", f"LEAN_BIN={lean.resolve()}",
-        str(lean.resolve()), "--json", "-M", "8000", "-j", "2",
-    ]
-    if output:
-        args += ["-o", output]
-    if profile:
-        args.append("--profile")
-    args.append(file)
-    start = time.monotonic()
-    log_path = directory / f"{file}.log"
-    timed_out = False
-    with log_path.open("w", encoding="utf-8") as trace:
-        try:
-            done = subprocess.run(args, cwd=directory, stdout=trace,
-                                  stderr=subprocess.STDOUT, timeout=timeout, env={
-                                      "LEAN_PATH": f"{directory}:{arm.resolve()}",
-                                      "PATH": "/usr/bin:/bin",
-                                  })
-            success = done.returncode == 0
-        except subprocess.TimeoutExpired:
-            trace.write("\nLean timed out.\n")
-            success = False
-            timed_out = True
-    log = log_path.read_text(errors="replace")
-    messages = []
-    for line in log.splitlines():
-        if line.startswith("{"):
-            try:
-                messages.append(json.loads(line))
-            except json.JSONDecodeError:
-                if not timed_out:
-                    raise
-    diagnostics = "\n".join(str(m.get("data", "")) for m in messages)
-    if timed_out:
-        diagnostics = (diagnostics + "\nLean timed out.").lstrip()
-    return success, diagnostics or log, round(time.monotonic() - start, 2)
-
-
-def require_lean(directory, file):
-    ok, log, _ = check_lean(directory, file, output=file.replace(".lean", ".olean"))
-    if not ok:
-        raise ValueError(f"{file} failed in {directory}\n{log[-1500:]}")
-
-
-def axiom_audit(log):
-    if "'HarnessVerdict' does not depend on any axioms" in log:
-        return []
-    matches = re.findall(r"'HarnessVerdict' depends on axioms: \[([^\]]*)\]", log)
-    if len(matches) != 1:
-        raise ValueError("Lean did not report exactly one audit for HarnessVerdict.")
-    dependencies = {x.strip() for x in matches[0].split(",") if x.strip()}
-    if not dependencies <= AXIOMS:
-        raise ValueError("Lean reported an unapproved axiom: " + ", ".join(sorted(dependencies - AXIOMS)))
-    return sorted(dependencies)
-
 
 def call_model(args, work, prompt, model, *, replay=None):
     return ask(work, prompt, model, args.endpoint, args.key, args.max_tokens, args.reasoning_effort,
                replay=replay)
 
 
-def record_run(run, args, role, model):
+def record_run(run, args, case, role, model):
     settings = {
         "schema_version": 1, "mode": "fixture-replay" if args.fixture_replay else "live",
-        "case": "opendp-sized-bounded-sum", "role": role, "model": model,
+        "case": case.name, "role": role, "model": model,
+        "candidate_order": case.provenance["candidate_order"],
         "endpoint": args.endpoint, "deepseek_harness_sdk": version("deepseek-harness-sdk"),
         "attempts": args.attempts, "max_tokens_per_request": args.max_tokens,
         "reasoning_effort": args.reasoning_effort,
@@ -137,22 +36,23 @@ def record_run(run, args, role, model):
                         lean_profile=args.lean_profile)
         if args.arm_replay:
             settings.update(replay_timeout_seconds=args.replay_timeout, mcp_sdk=version("mcp"))
-        files = [HERE / "workflow.py", HERE / "model.py", HERE / "toolchain.py", HERE / "lean.sb", CASE / "proof.prompt",
-                 CASE / ("proof-replay.prompt" if args.arm_replay else "proof-direct.prompt")]
+        files = [HERE / "workflow.py", HERE / "model.py", HERE / "toolchain.py", HERE / "lean.py", HERE / "cases.py",
+                 HERE / "lean.sb", case.directory / "proof.prompt",
+                 case.directory / ("proof-replay.prompt" if args.arm_replay else "proof-direct.prompt")]
         if args.arm_replay:
             files.append(HERE / "replay.py")
         settings["harness_sha256"] = {str(path.relative_to(ROOT)): digest(path) for path in files}
     put(run / "experiment.json", json.dumps(settings, indent=2) + "\n")
 
 
-def draft(args):
+def draft(args, case):
     run = args.run.resolve()
     run.mkdir(parents=True)
-    record_run(run, args, "spec", args.spec_model)
-    shutil.copyfile(CASE / "Inputs.lean", run / "Inputs.lean")
+    record_run(run, args, case, "spec", args.spec_model)
+    shutil.copyfile(case.directory / "Inputs.lean", run / "Inputs.lean")
     require_lean(run, "Inputs.lean")
     prompt = (
-        (CASE / "spec.prompt").read_text() + "\n" + PUBLIC_CASE
+        case.read("spec.prompt") + "\n" + case.read("brief.txt")
         + "\nINPUTS LEAN DEFINITIONS\n" + (run / "Inputs.lean").read_text()
     )
     feedback = ""
@@ -160,7 +60,7 @@ def draft(args):
         work = run / f"spec-{attempt}"
         try:
             text = call_model(args, work, prompt + feedback, args.spec_model)
-            put(run / "Spec.lean", "import Inputs\n\n" + lean_code(text) + "\n" + SPEC_CHECKS)
+            put(run / "Spec.lean", "import Inputs\n\n" + lean_code(text) + "\n\n" + case.read("SpecChecks.lean"))
             try:
                 require_lean(run, "Spec.lean")
             finally:
@@ -178,71 +78,18 @@ def draft(args):
     raise ValueError("The spec did not check. See the attempt logs.")
 
 
-def prepare_machine(run, candidate, *, arm_replay):
-    expected = PROVENANCE["fixture_sha256"]
-    for name, checksum in expected.items():
-        if digest(CASE / name) != checksum:
-            raise ValueError(f"Pilot artifact differs from the pinned snapshot: {name}")
-    # Assign opaque IDs by the known binary digests. Labels and native test results
-    # stay out of the proof prompt.
-    binaries = sorted(
-        (PROVENANCE["binary_sha256"][side], side)
-        for side in ("before", "after")
-    )
-    checksum, side = binaries[ord(candidate) - ord("A")]
-    stage = run / candidate
-    stage.mkdir()
-    extraction = (CASE / "fixtures/ClosureBytes.lean").read_text()
-    selection = [section for section in re.split(r"(?=^def )", extraction, flags=re.M)
-                 if section.startswith(f"def {side}_")]
-    put(stage / "ClosureBytes.lean", "".join(selection).replace(f"def {side}_", "def binary_"))
-    replay = (CASE / "native/ArmReplay.lean").read_text().replace("import Spec", "import Inputs")
-    start = replay.index("def beforeLayout")
-    end = replay.index("def runSum", start)
-    replay = replay[:start] + replay[end:]
-    put(stage / "Machine.lean", replay + """
-def machineLayout : Replay.VectorLayout :=
-  ⟨binary_capacityOffset, binary_pointerOffset, binary_lengthOffset⟩
-def machineSum := Replay.sum binary_sum machineLayout
-def machineBound := Replay.bound binary_bound binary_capture
-""")
-    for name in ("Inputs.lean", "Spec.lean"):
-        shutil.copyfile(run / name, stage / name)
-    for module in ("Inputs", "Spec", "ClosureBytes", "Machine"):
-        require_lean(stage, f"{module}.lean")
-    output = ""
-    if not arm_replay:
-        put(stage / "Emulate.lean", """import Machine
-#eval (List.finRange 4).map (fun a => (List.finRange 4).map (fun b => machineSum (a, b)))
-#eval (List.finRange 5).map machineBound
-""")
-        ok, output, _ = check_lean(stage, "Emulate.lean", timeout=45)
-        if not ok:
-            raise ValueError(f"ARM replay failed in {stage}\n{output[-1200:]}")
-    put(stage / "binary.json", json.dumps({
-        "candidate": candidate, "sha256": checksum, "source_git": PROVENANCE["opendp_git"][side],
-        "arm_model_git": PROVENANCE["arm_model_git"], "rust": PROVENANCE["rust"],
-        "lean": PROVENANCE["lean"], "closure_bytes_sha256": digest(stage / "ClosureBytes.lean"),
-        "machine_sha256": digest(stage / "Machine.lean"),
-    }, indent=2) + "\n")
-    asm = (CASE / "fixtures" / f"{side}.asm").read_text()
-    # Symbols can expose whether the case is old or new. The instruction bytes are sufficient.
-    assembly = "\n".join(line.split("<", 1)[0].rstrip() for line in asm.splitlines()
-                         if re.match(r"^\s*[0-9a-f]+:", line))
-    return stage, output, assembly
-
-
-def prove_one(args, run, candidate):
-    stage, output, assembly = prepare_machine(run, candidate, arm_replay=args.arm_replay)
+def prove_one(args, case, run, candidate):
+    prepared = case.prepare(run, candidate, include_hints=not args.arm_replay)
+    stage = prepared.directory
     instructions = "proof-replay.prompt" if args.arm_replay else "proof-direct.prompt"
-    proof_prompt = (CASE / "proof.prompt").read_text().replace(
-        "{replay_instructions}", (CASE / instructions).read_text().rstrip(),
+    proof_prompt = case.read("proof.prompt").replace(
+        "{replay_instructions}", case.read(instructions).rstrip(),
     )
     prompt = (
         proof_prompt + "\nFROZEN SPEC\n" + (stage / "Spec.lean").read_text()
         + "\nINPUT TYPE DEFINITIONS\n" + (stage / "Inputs.lean").read_text()
         + "\nMACHINE LEAN API\n" + (stage / "Machine.lean").read_text()
-        + ("\nARM REPLAY HINTS\n" + output if output else "") + "\nARM DISASSEMBLY\n" + assembly
+        + ("\nARM REPLAY HINTS\n" + prepared.hints if prepared.hints else "") + "\nARM DISASSEMBLY\n" + prepared.assembly
     )
     replay = (stage, args.replay_timeout, args.lean_profile) if args.arm_replay else None
     feedback = ""
@@ -270,15 +117,18 @@ def prove_one(args, run, candidate):
                 raise ValueError("The first line must be PROVE, REFUTE, or UNKNOWN.")
             negation = "¬ " if verdict == "REFUTE" else ""
             file = f"Attempt{attempt}.lean"
-            target = negation + "_root_.Sensitivity _root_.machineSum _root_.machineBound"
-            put(stage / file, imports + "\n" + LIMITS + lean_code(declarations) +
-                f"\n\ntheorem HarnessVerdict : {target} := _root_.candidate\n#print axioms HarnessVerdict\n")
-            ok, log, elapsed = check_lean(stage, file, timeout=args.lean_timeout, profile=args.lean_profile)
-            timings["lean_seconds"] = elapsed
-            if not ok:
-                raise ValueError(log[-2200:])
+            target = negation + case.target
+            source = (imports + "\n" + LIMITS + lean_code(declarations)
+                      + f"\n\ntheorem HarnessVerdict : {target} := _root_.candidate\n"
+                      + "#print axioms HarnessVerdict\n")
+            put(stage / file, source)
+            result = check_lean(stage, file, timeout=args.lean_timeout, profile=args.lean_profile)
+            timings["lean_seconds"] = result.seconds
+            if not result.ok:
+                raise ValueError(result.diagnostics[-2200:])
             checked = {"candidate": candidate, "status": "refuted" if negation else "proved",
-                       "attempt": attempt, **timings, "axioms": axiom_audit(log)}
+                       "attempt": attempt, **timings,
+                       "axioms": result.verdict_axioms(len(source.splitlines()))}
             put(stage / "verdict.json", json.dumps(checked, indent=2) + "\n")
             return checked
         except ValueError as error:
@@ -292,7 +142,7 @@ def prove_one(args, run, candidate):
     return checked
 
 
-def verify(args):
+def verify(args, case):
     approved = args.run.resolve() / "Spec.lean"
     spec_bytes = approved.read_bytes()
     if hashlib.sha256(spec_bytes).hexdigest() != args.approve_spec:
@@ -304,11 +154,11 @@ def verify(args):
     lean_code(body)
     run = args.out.resolve()
     run.mkdir(parents=True)
-    record_run(run, args, "proof", args.proof_model)
-    shutil.copyfile(CASE / "Inputs.lean", run / "Inputs.lean")
+    record_run(run, args, case, "proof", args.proof_model)
+    shutil.copyfile(case.directory / "Inputs.lean", run / "Inputs.lean")
     put(run / "Spec.lean", spec)
     put(run / "spec.sha256", args.approve_spec + "\n")
-    outcomes = [prove_one(args, run, case) for case in (args.candidate or "AB")]
+    outcomes = [prove_one(args, case, run, candidate) for candidate in (args.candidate or "AB")]
     put(run / "report.json", json.dumps(outcomes, indent=2) + "\n")
     for outcome in outcomes:
         print(f"{outcome['candidate']}: {outcome['status']}")
@@ -317,6 +167,7 @@ def verify(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--case", default=DEFAULT_CASE, choices=available_cases())
     parser.add_argument("--endpoint", default=OPENROUTER_URL)
     parser.add_argument("--attempts", type=int, default=2)
     parser.add_argument("--max-tokens", type=int, default=8192)
@@ -350,8 +201,11 @@ def main():
             Toolchain.from_environment().install()
             return 0
         args.key = credentials(args.endpoint)
-        check_toolchain()
-        return draft(args) if args.stage == "draft" else verify(args)
+        case = Case.load(args.case)
+        if args.stage == "verify" and args.arm_replay and not case.supports_replay:
+            raise ValueError(f"The ARM replay tool is unavailable for {case.name}.")
+        Toolchain.from_environment().require()
+        return draft(args, case) if args.stage == "draft" else verify(args, case)
     except (ValueError, OSError, subprocess.SubprocessError) as error:
         print(error, file=sys.stderr)
         return 1

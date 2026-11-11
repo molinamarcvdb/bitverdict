@@ -1,0 +1,10 @@
+{
+  "candidate": "A",
+  "status": "proved",
+  "attempt": 1,
+  "lean_seconds": 8.36,
+  "axioms": [
+    "Quot.sound",
+    "propext"
+  ]
+}

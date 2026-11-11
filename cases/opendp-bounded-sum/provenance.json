@@ -17,6 +17,18 @@
     "fixtures/before.asm": "fc745c9c6064d037c78e4be8ad07c063f5f44d50a10e19e85d0d71ea89023ab5",
     "fixtures/after.asm": "f90cdf49b6d4012da7f6dfa19cab97c445f57dde5fc7684663d10b0772f66e8e",
     "Spec.lean": "c9bb4e8cf48219cbd2260a8e23971152e92841debd162154e4cb85a2a07cee36",
-    "Inputs.lean": "c3eb96696e65be4bb32e20a5d6702177e956e09bff9371a158799242644b9d55"
-  }
+    "Inputs.lean": "c3eb96696e65be4bb32e20a5d6702177e956e09bff9371a158799242644b9d55",
+    "Machine.lean": "b299c1f09f2d0c9a8989ba6b6c32ece37e0c4704211e9bcd992203a99d33e16a",
+    "SpecChecks.lean": "d26190fe146f6aeb8d65dba62bb27d5f24b0e5e9e17fac0308203cb02bda4199",
+    "Emulate.lean": "07737131bb55786e4fc699c66d191c71cd5ec3c1b30264f9506143dea1998bcc"
+  },
+  "claim": [
+    "Sensitivity",
+    "machineSum",
+    "machineBound"
+  ],
+  "candidate_order": [
+    "after",
+    "before"
+  ]
 }

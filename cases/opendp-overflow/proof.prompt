@@ -1,0 +1,13 @@
+Check the frozen Lean specification against one compiled ARM64 program. The driver imports Machine, which defines machineSum and machineBound, and Spec, which defines Sensitivity. Both candidate versions use the same spec. Choose one result.
+
+PROVE followed by Lean declarations that include
+theorem candidate : Sensitivity machineSum machineBound := ...
+REFUTE followed by Lean declarations that include
+theorem candidate : ¬ Sensitivity machineSum machineBound := ...
+UNKNOWN if you cannot produce either proof.
+
+The checker uses Lean 4.34.0 and core Lean without Mathlib. Use theorem for all proofs, including helpers. The fin_cases tactic is unavailable. Use List.finRange, List.all_eq_true, and List.mem_finRange for finite proofs. For closed machine computations, use cbv. Use the signed return value given by the ARM model. The public test vectors appear in the frozen specification. The native disassembly and emulation results are hints only.
+
+{replay_instructions}
+
+Return the verdict on line one and only Lean declarations below it. Do not include imports, options, comments, metaprogramming, sorry, or native_decide.

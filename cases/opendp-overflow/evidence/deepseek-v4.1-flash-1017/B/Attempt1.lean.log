@@ -1,0 +1,29 @@
+import took 1.36s
+{"caption":"","data":"tactic execution of Lean.Parser.Tactic.cbv took 5.57s\ntactic execution of Lean.Parser.Tactic.cbv took 5.47s\ntactic execution of Lean.Parser.Tactic.cbv took 2.73s\ntactic execution of Lean.Parser.Tactic.cbv took 2.94s\ntactic execution of Lean.Parser.Tactic.exact took 356ms\nshare common exprs took 345ms\nprocess pre-definitions took 466ms\n","endPos":null,"fileName":"Attempt1.lean","isSilent":false,"keepFullRange":false,"kind":"[anonymous]","pos":{"column":0,"line":7},"severity":"information"}
+{"caption":"","data":"type checking took 1.91s\n","endPos":null,"fileName":"Attempt1.lean","isSilent":false,"keepFullRange":false,"kind":"[anonymous]","pos":{"column":8,"line":7},"severity":"information"}
+{"caption":"","data":"'HarnessVerdict' depends on axioms: [propext, Quot.sound]","endPos":{"column":6,"line":38},"fileName":"Attempt1.lean","isSilent":false,"keepFullRange":false,"kind":"[anonymous]","pos":{"column":0,"line":38},"severity":"information"}
+{"caption":"","data":"elaboration took 263ms\n","endPos":null,"fileName":"Attempt1.lean","isSilent":false,"keepFullRange":false,"kind":"[anonymous]","pos":{"column":0,"line":38},"severity":"information"}
+cumulative profiling times:
+	attribute application 0.0194ms
+	blocked (unaccounted) 20s
+	compilation (IR) 4.5ms
+	compilation (LCNF base) 19.8ms
+	compilation (LCNF impure) 26.1ms
+	compilation (LCNF mono) 18.1ms
+	congr simp thm 5.53ms
+	elaboration 338ms
+	fix level params 38.8ms
+	import 1.36s
+	initialization 180ms
+	instantiate metavars 0.285ms
+	interpretation 9.42ms
+	let-to-have transformation 0.207ms
+	linting 2.45ms
+	module linting 0.256ms
+	parsing 0.553ms
+	process pre-definitions 468ms
+	share common exprs 345ms
+	simp 59.7ms
+	tactic execution 17.1s
+	type checking 1.93s
+	typeclass inference 33.2ms

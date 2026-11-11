@@ -12,11 +12,12 @@ import sys
 import tempfile
 import threading
 
-from dpverify.workflow import CASE, ROOT, digest
+from dpverify.cases import CASES, DEFAULT_CASE, ROOT
+from dpverify.toolchain import digest
 
 
 def fixtures():
-    native = CASE / "native"
+    native = CASES / DEFAULT_CASE / "native"
     spec = (native / "Spec.lean").read_text()
     spec = "\n".join(line for line in spec.splitlines() if not line.startswith(("--", "abbrev")))
     checked = (native / "Check.lean").read_text()

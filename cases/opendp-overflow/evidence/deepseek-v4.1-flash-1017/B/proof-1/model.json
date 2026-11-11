@@ -1,0 +1,15 @@
+{
+  "model": "deepseek/deepseek-v4.1-flash-1017",
+  "max_tokens": 32768,
+  "reasoning_effort": null,
+  "started_unix": 1794386250.382208,
+  "finish_reason": "completed",
+  "usage": [
+    {
+      "inputTokens": 2707,
+      "outputTokens": 6386,
+      "totalTokens": 9093
+    }
+  ],
+  "model_seconds": 22.43
+}

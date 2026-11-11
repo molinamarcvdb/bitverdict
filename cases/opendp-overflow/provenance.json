@@ -1,0 +1,41 @@
+{
+  "lean": "4.34.0",
+  "rust": "1.94.1",
+  "arm_model_git": "808b4b7ffef198e6a91f71ed776d641a1c236882",
+  "opendp_git": {
+    "before": "1460de1cf84a1e1844534a7c2135b480533099f7",
+    "after": "e564f2484186fccaa586db033f03060199111c60"
+  },
+  "binary_sha256": {
+    "before": "d5a93f2d3f1117eb88fe48061f4c5db26195e5679da0e95df1505ef97e59e11d",
+    "after": "81aef5324a8903a39fef95fa19e97f0c04090a5640f71743d6831f39cd3a92ba"
+  },
+  "fixture_sha256": {
+    "Inputs.lean": "69acf749a6e91b972a30ea82343d17d79ed0d0078f7d1678e7c7660380e60007",
+    "Spec.lean": "4720b6d5d1fcba03455acb8a316d6aef0f843533233d4f4c5a16712b218053f0",
+    "SpecChecks.lean": "3c1f675074309b5256fcfe559475d599df633d0296e0b01f50cbcd9709108e0c",
+    "Machine.lean": "352cf339a1d192c36ccdad40932883bfbcc2fc5a57c98758ffcd393b3cef2ddd",
+    "ReplayCore.lean": "3258782229c0d79b7e9f9ea89694627494eb671e3231f0a99d2273e9a24d084c",
+    "Emulate.lean": "722d2d805108f01ba2c4777ba722d18e370ae88a67d61d5fd3c63dbb3bc311d8",
+    "brief.txt": "527d3814ac57c33c6cbd88056ee3d760f14a6110f3f7e164d42dc89c190c4d63",
+    "spec.prompt": "43d213e8ab8938d7efd2bbf5106234559ff77d2ad1868591e8dadeaf10337e99",
+    "proof.prompt": "1446f5c242b89f41281ead41da2818c94e32c2f02aa0db6677668ce8da62b7b9",
+    "proof-direct.prompt": "ec1505e0a2728cfd3a1395a99a9c5b5eaaf939173dc51c09ac2d1d682eee23e9",
+    "fixtures/ClosureBytes.lean": "f9659c54a04446d18a6bf60adb1ee7b735cf1d158c0833d1ffc030b1c5442013",
+    "fixtures/before.asm": "4c9f3527ba23bdbb1fcc7570f8b8eb839ee02f7bc80b3e6ed0b930e0b3a10980",
+    "fixtures/after.asm": "d814a6f7f6808a06a9ee9af4de5134f7f281f08df959943ab26362f43de5bf5a",
+    "native/probe.rs": "1a69163dd1dcfc8faf17c625a0e95ed84ce8391f9b2877b9fe6349d2b6ff7659",
+    "native/extract.py": "aa6011cbffb0cb2a92ecd2ff4b4e11c7cc259f8fc48b084ac17f4014a0c40d7c",
+    "native/run.sh": "f25cffe3b9754f902156b7ec908486ed2117578f8e22db229e794aa94f70d28b",
+    "native/Cargo.lock": "9f8ff06cf5cc32ef73038b0742f6862e877e5f31ba4447ee670e93971d18f4c9"
+  },
+  "claim": [
+    "Sensitivity",
+    "machineSum",
+    "machineBound"
+  ],
+  "candidate_order": [
+    "after",
+    "before"
+  ]
+}

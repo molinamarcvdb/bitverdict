@@ -1,0 +1,104 @@
+Check the frozen Lean specification against one compiled ARM64 program. The driver imports Machine, which defines machineSum and machineBound, and Spec, which defines Sensitivity. Both candidate versions use the same spec. Choose one result.
+
+PROVE followed by Lean declarations that include
+theorem candidate : Sensitivity machineSum machineBound := ...
+REFUTE followed by Lean declarations that include
+theorem candidate : ¬ Sensitivity machineSum machineBound := ...
+UNKNOWN if you cannot produce either proof.
+
+The checker uses Lean 4.34.0 and core Lean without Mathlib. Use theorem for all proofs, including helpers. The fin_cases tactic is unavailable. Use List.finRange, List.all_eq_true, and List.mem_finRange for finite proofs. For closed machine computations, use cbv. Use the signed return value given by the ARM model. The public test vectors appear in the frozen specification. The native disassembly and emulation results are hints only.
+
+Prove or refute the sensitivity claim using machineSum and machineBound. Reduce closed machine calls with cbv and use finite enumeration for the contract. Treat the disassembly and ARM emulation as hints only.
+
+Return the verdict on line one and only Lean declarations below it. Do not include imports, options, comments, metaprogramming, sorry, or native_decide.
+
+FROZEN SPEC
+import Inputs
+
+def datasetTokens : Dataset → List (Fin 4)
+  | 0 => [0]
+  | 1 => [1, 0]
+  | 2 => [1, 0, 2]
+  | 3 => [1, 0, 3]
+
+def tokenCount (x token : Dataset) : Nat :=
+  (datasetTokens x).filter (fun value => decide (value = token)) |>.length
+
+def sharedCount (x y : Dataset) : Nat :=
+  (List.finRange 4).map (fun token => min (tokenCount x token) (tokenCount y token)) |>.sum
+
+def symmetricDistance (x y : Dataset) : Nat :=
+  (datasetTokens x).length + (datasetTokens y).length - 2 * sharedCount x y
+
+def absoluteDifference (x y : Int) : Nat := (x - y).natAbs
+
+def expectedBound (d : Budget) : Nat := 1073741824 * d.val
+
+def Sensitivity (sum : Dataset → Option Int) (bound : Budget → Option Nat) : Prop :=
+  ∀ x y : Dataset, ∀ d : Budget, symmetricDistance x y ≤ d.val →
+    ∃ sx sy : Int, ∃ b : Nat,
+      sum x = some sx ∧ sum y = some sy ∧ bound d = some b ∧
+      absoluteDifference sx sy ≤ b
+
+def rows : List Dataset := List.finRange 4
+
+theorem row_mem (x : Dataset) : x ∈ rows := List.mem_finRange x
+
+def mathematicalSum (x : Dataset) : Int :=
+  ((datasetTokens x).map (fun token => Int.ofNat ([1073741823, 1073741824, 1, 0][token.val]!))).sum
+
+theorem mathematical_sensitivity (x y : Dataset) (d : Budget)
+    (h : symmetricDistance x y ≤ d.val) :
+    absoluteDifference (mathematicalSum x) (mathematicalSum y) ≤ expectedBound d := by
+  have all : rows.all (fun a => rows.all (fun b => (List.finRange 2).all (fun k =>
+      decide (symmetricDistance a b ≤ k.val →
+        absoluteDifference (mathematicalSum a) (mathematicalSum b) ≤ expectedBound k)))) = true := by
+    decide
+  have atX := List.all_eq_true.mp all x (row_mem x)
+  have atXY := List.all_eq_true.mp atX y (row_mem y)
+  have atXYD := List.all_eq_true.mp atXY d (List.mem_finRange d)
+  exact of_decide_eq_true atXYD h
+
+example : Dataset → Dataset → Nat := symmetricDistance
+example : Int → Int → Nat := absoluteDifference
+example : (Dataset → Option Int) → (Budget → Option Nat) → Prop := Sensitivity
+
+INPUT TYPE DEFINITIONS
+abbrev Dataset := Fin 4
+abbrev Budget := Fin 2
+
+MACHINE LEAN API
+import ReplayCore
+import ClosureBytes
+
+open Replay
+
+def machineLayout : Replay.VectorLayout :=
+  ⟨binary_capacityOffset, binary_pointerOffset, binary_lengthOffset⟩
+def machineSum := Replay.sum binary_sum machineLayout
+def machineBound (d : Budget) : Option Nat := some (1073741824 * d.val)
+
+ARM REPLAY HINTS
+[some 1073741823, some 2147483647, some 2147483647, some 2147483647]
+[some 0, some 1073741824]
+ARM DISASSEMBLY
+10000160c: f9400829    	ldr	x9, [x1, #0x10]
+100001610: b40001c9    	cbz	x9, 0x100001648
+100001614: 5280000a    	mov	w10, #0x0               ; =0
+100001618: f940042b    	ldr	x11, [x1, #0x8]
+10000161c: b840456c    	ldr	w12, [x11], #0x4
+100001620: 2b0c014a    	adds	w10, w10, w12
+100001624: 131f7d4c    	asr	w12, w10, #31
+100001628: 5201018c    	eor	w12, w12, #0x80000000
+10000162c: 1a8a618a    	csel	w10, w12, w10, vs
+100001630: f1000529    	subs	x9, x9, #0x1
+100001634: 54ffff41    	b.ne	0x10000161c
+100001638: b900090a    	str	w10, [x8, #0x8]
+10000163c: b24107e9    	mov	x9, #-0x7fffffffffffffff ; =-9223372036854775807
+100001640: f9000109    	str	x9, [x8]
+100001644: d65f03c0    	ret
+100001648: 5280000a    	mov	w10, #0x0               ; =0
+10000164c: b900090a    	str	w10, [x8, #0x8]
+100001650: b24107e9    	mov	x9, #-0x7fffffffffffffff ; =-9223372036854775807
+100001654: f9000109    	str	x9, [x8]
+100001658: d65f03c0    	ret

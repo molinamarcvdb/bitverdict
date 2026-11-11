@@ -1,0 +1,10 @@
+{
+  "candidate": "B",
+  "sha256": "d5a93f2d3f1117eb88fe48061f4c5db26195e5679da0e95df1505ef97e59e11d",
+  "source_git": "1460de1cf84a1e1844534a7c2135b480533099f7",
+  "arm_model_git": "808b4b7ffef198e6a91f71ed776d641a1c236882",
+  "rust": "1.94.1",
+  "lean": "4.34.0",
+  "closure_bytes_sha256": "3e4d0ea8489df30d09b56138e894b722b81a4678a6217ec52bb894c54ac0bbcb",
+  "machine_sha256": "352cf339a1d192c36ccdad40932883bfbcc2fc5a57c98758ffcd393b3cef2ddd"
+}

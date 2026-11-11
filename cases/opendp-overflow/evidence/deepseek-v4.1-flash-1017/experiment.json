@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "mode": "live",
+  "case": "opendp-overflow",
+  "role": "proof",
+  "model": "deepseek/deepseek-v4.1-flash-1017",
+  "candidate_order": [
+    "after",
+    "before"
+  ],
+  "endpoint": "https://openrouter.ai/api/v1",
+  "deepseek_harness_sdk": "0.2.1rc2",
+  "attempts": 2,
+  "max_tokens_per_request": 32768,
+  "reasoning_effort": null,
+  "candidate": null,
+  "spec_sha256": "e0f2f02a87297c05a65faa6633c72fbe9b5d33b9bb3e5c030e221ab6799f7f43",
+  "arm_replay_tool": false,
+  "lean_timeout_seconds": 420,
+  "lean_profile": true,
+  "harness_sha256": {
+    "dpverify/workflow.py": "f6b7d6f8b48e644ed87b9f2cff45c9250b1a4cf2cefe598c6c76c78af91a9ef0",
+    "dpverify/model.py": "2274cc5f450a14a1174fcbc1b60c52fd4f663ac091b4a07fae01ca4d6edba873",
+    "dpverify/toolchain.py": "9e2eda22d3780bce19fa9c98490743e94266f8cbc7b5306f99ebbf2f9d575aa9",
+    "dpverify/lean.py": "4b2eeadfa50ba6c5d42448bfa77214bc19969fcdc8523a9a4dea4d378f67c98d",
+    "dpverify/cases.py": "594917b588ad41a7a4ee2e9e471a7bf5411cd16d543e8b4182e1f6fe5e438a86",
+    "dpverify/lean.sb": "a0874ce44056c6f487207e2065e23ae4cae0f49472cc263c2ee3b043253ffe58",
+    "cases/opendp-overflow/proof.prompt": "1446f5c242b89f41281ead41da2818c94e32c2f02aa0db6677668ce8da62b7b9",
+    "cases/opendp-overflow/proof-direct.prompt": "ec1505e0a2728cfd3a1395a99a9c5b5eaaf939173dc51c09ac2d1d682eee23e9"
+  }
+}

@@ -17,7 +17,7 @@ flowchart LR
     Check -. "Diagnostics on retry" .-> Agent
 ```
 
-Start with the [OpenDP case](cases/opendp-bounded-sum/README.md) for the bug, the input domain, and the connection between the extracted bytes and Lean.
+The [bounded-sum case](cases/opendp-bounded-sum/README.md) shows an underestimated stability map. The [overflow case](cases/opendp-overflow/README.md) compares the actual compiled sum before and after an integer overflow fix.
 
 The [dataset notes](docs/dataset-sources.md) list other upstream fixes and the work needed to turn them into benchmark cases.
 
@@ -68,7 +68,7 @@ The replay tool checks tables of machine outputs. DeepSeek writes the theorem th
 ## Repository layout
 
 - [dpverify/](dpverify/) contains the workflow, DeepSeek Harness integration, and replay tool.
-- [cases/opendp-bounded-sum/](cases/opendp-bounded-sum/) contains the frozen spec, extracted instruction snapshots, provenance, and the native rebuild recipe.
+- [cases/](cases/) contains the frozen specs, extracted instruction snapshots, provenance, and native rebuild recipes for both OpenDP cases.
 - [tests/smoke.py](tests/smoke.py) runs the workflow through the real SDK with a local fixture provider.
 
 The check covers the two-record integer contract for the compiled closures and their recorded Rust call layout. It relies on the extractor, call layout, and ARM64 model. The contract does not establish end-to-end privacy for OpenDP or its noise mechanisms.
