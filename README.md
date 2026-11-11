@@ -1,6 +1,6 @@
-# Check compiled differential privacy code with Lean
+# BitVerdict
 
-This research pilot gives DeepSeek one Lean sensitivity claim and two compiled ARM64 builds of an OpenDP function. DeepSeek writes a proof or a refutation for each build, and Lean checks the result.
+BitVerdict checks differential privacy claims against compiled code. The harness gives DeepSeek the same Lean sensitivity claim for two ARM64 builds of an OpenDP function. DeepSeek proposes a proof or refutation for each build, and Lean checks the theorem.
 
 | Case | What Lean checks |
 | --- | --- |
